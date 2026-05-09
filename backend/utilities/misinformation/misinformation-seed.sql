@@ -1,15 +1,3 @@
--- seed.sql
--- Development seed for the misinformation-tracking schema.
--- Idempotent: TRUNCATE wipes the tables, so re-running gives the same final state.
---
--- Notes on alignment with narratives_updated.json:
---   * Every narrative_id, post_id, incident_id, key_claim and matched_fact from
---     the JSON is reproduced verbatim.
---   * combined_shares from the JSON is split across the narrative's posts so the
---     SUM(share_count) per cluster matches exactly.
---   * post.severity is GENERATED from misinformation_risk_score; values are
---     chosen so each cluster's posts roll up to the JSON's narrative severity.
---   * misinformation_risk_score is NUMERIC(2,1), so values are 1 d.p. only.
 
 BEGIN;
 
@@ -22,92 +10,60 @@ TRUNCATE TABLE
     incidents
 RESTART IDENTITY CASCADE;
 
--- ---------------------------------------------------------------------------
--- Incidents
--- ---------------------------------------------------------------------------
 INSERT INTO incidents (id, name, is_active) VALUES
-    -- From JSON
     ('inc_east_gippsland', 'East Gippsland fire complex',     TRUE),
     ('inc_grampians',      'Grampians National Park fire',    TRUE),
     ('inc_otway_ranges',   'Otway Ranges grass fire',         TRUE),
-    -- Extras
     ('inc_macedon_ranges', 'Macedon Ranges spotfire',         FALSE),
     ('inc_mornington',     'Mornington Peninsula scrub fire', TRUE),
     ('inc_dandenongs',     'Dandenong Ranges ember alert',    FALSE);
 
--- ---------------------------------------------------------------------------
--- Posts
--- ---------------------------------------------------------------------------
--- misinformation_risk_score thresholds (drives generated severity column):
---   >= 0.8 -> CRITICAL
---   >= 0.5 -> HIGH
---   <  0.5 -> MEDIUM
 INSERT INTO posts (id, author_name, platform, content, ts, share_count, post_url, misinformation_risk_score) VALUES
-    -- nar_001  (CRITICAL, combined_shares = 7490)
     ('post_001', '@gippy_local',     'TWITTER',  'BREAKING: CFA has just ordered FULL evacuation of Bairnsdale CBD. Get out NOW. They aren''t telling you how close it really is.',                  '2026-01-22T06:14:00+11:00', 3450, 'https://twitter.com/gippy_local/status/1',                0.9),
     ('post_002', 'EastGippyAlerts',  'FACEBOOK', 'Friends in Bairnsdale — evacuation order is OFFICIAL. Authorities have been hiding the real distance of the fire. Share to save lives.',          '2026-01-22T06:52:00+11:00', 2820, 'https://facebook.com/EastGippyAlerts/posts/2',            0.9),
     ('post_003', 'u/bushfire_truth', 'REDDIT',   'My cousin in CFA says they pushed an evac order for Bairnsdale CBD this morning but the website hasn''t caught up. Spread the word.',             '2026-01-22T07:48:00+11:00', 1220, 'https://reddit.com/r/melbourne/comments/3',               0.8),
 
-    -- nar_002  (HIGH, combined_shares = 4740)
     ('post_004', '@firewatcher_au',  'TWITTER',  'Wake up. The Grampians fire didn''t start itself. Eco-greens blocked the burn-offs and now arsonists are doing the rest. CFA won''t say it.',     '2026-01-21T19:30:00+11:00', 3200, 'https://twitter.com/firewatcher_au/status/4',             0.7),
     ('post_005', 'TruthAboutFires',  'FACEBOOK', 'They''re hiding it again. Grampians fire = arson + decades of blocked fuel reduction. Don''t believe the official line.',                          '2026-01-21T20:15:00+11:00', 1540, 'https://facebook.com/TruthAboutFires/posts/5',            0.6),
 
-    -- nar_003  (HIGH, combined_shares = 13470)
     ('post_006', '@drive_vic',       'TWITTER',  'Princes Hwy between Bairnsdale and Lakes Entrance is COMPLETELY CLOSED. There is NO eastbound evacuation route. VicRoads is lying.',              '2026-01-22T11:05:00+11:00', 9100, 'https://twitter.com/drive_vic/status/6',                  0.7),
     ('post_007', '@gippsland_now',   'TIKTOK',   'POV: trying to leave Bairnsdale and the highway is shut both ways. Why is no one talking about this?? #vicfires',                                  '2026-01-22T12:40:00+11:00', 4370, 'https://tiktok.com/@gippsland_now/video/7',               0.7),
 
-    -- nar_004  (MEDIUM, combined_shares = 465)
     ('post_008', '@coast_weather',   'TWITTER',  'Hearing whispers of a 3pm wind change pushing the Otways fire straight at Apollo Bay. BoM not saying it publicly but my source is solid.',        '2026-01-23T08:22:00+11:00',  310, 'https://twitter.com/coast_weather/status/8',              0.4),
     ('post_009', 'u/otway_resident', 'REDDIT',   'Anyone else heard the 3pm wind change rumour? My neighbour reckons BoM told her it''s coming but they''re holding the announcement.',             '2026-01-23T09:10:00+11:00',  155, 'https://reddit.com/r/geelong/comments/9',                 0.4),
 
-    -- nar_005  (HIGH, combined_shares = 11940)
     ('post_010', '@grant_help_vic',   'TWITTER',  'URGENT: Vic Govt $5000 emergency rebuild grant — fire-affected residents apply within 48hrs at vic-rebuild-claim[.]com',                          '2026-01-20T14:55:00+11:00', 5500, 'https://twitter.com/grant_help_vic/status/10',           0.7),
     ('post_011', 'BushfireSupportAU', 'FACEBOOK', 'The Victorian Government has launched a $5000 rebuild grant for fire victims. Apply here before the deadline closes!',                            '2026-01-20T16:20:00+11:00', 4200, 'https://facebook.com/BushfireSupportAU/posts/11',        0.7),
     ('post_012', '@reliefnow_au',     'TIKTOK',   'If your home was hit by the East Gippsland fires, you can claim $5000 from the state. Link in bio. Don''t miss it!',                              '2026-01-20T17:45:00+11:00', 2240, 'https://tiktok.com/@reliefnow_au/video/12',              0.6),
 
-    -- nar_006  (MEDIUM, combined_shares = 315)
     ('post_013', '@halls_gap_watch', 'TWITTER',  'Big wind change overnight will turn the Grampians fire toward Halls Gap. CFA is being too quiet about this one.',                                  '2026-01-21T21:30:00+11:00',  210, 'https://twitter.com/halls_gap_watch/status/13',           0.4),
     ('post_014', 'u/grampians_hiker','REDDIT',   'Anyone in Halls Gap should be packed and ready — overnight wind shift incoming according to a CFA volunteer I know.',                              '2026-01-21T22:05:00+11:00',  105, 'https://reddit.com/r/grampians/comments/14',              0.3),
 
-    -- ---- Extra fixtures below ---------------------------------------------
-
-    -- nar_007  False water-bomber crash report (CRITICAL)
     ('post_015', '@aviation_au',     'TWITTER',  'Reports a Coulson 737 water bomber went down near the Grampians 30 mins ago. No official word yet. Praying for the crew.',                         '2026-01-21T15:10:00+11:00', 8400, 'https://twitter.com/aviation_au/status/15',               0.9),
     ('post_016', 'PlaneSpottersVic', 'FACEBOOK', 'Heard from multiple sources a large air tanker crashed in the Grampians today. Authorities silent. Will update.',                                  '2026-01-21T15:42:00+11:00', 5300, 'https://facebook.com/PlaneSpottersVic/posts/16',          0.8),
 
-    -- nar_008  Looting rumours (MEDIUM)
     ('post_017', '@locals_first',    'TWITTER',  'Mate in Mallacoota says looters hit three evacuated houses last night. Police nowhere to be seen.',                                                 '2026-01-22T20:14:00+11:00',  410, 'https://twitter.com/locals_first/status/17',              0.4),
     ('post_018', 'u/east_gippsland', 'REDDIT',   'Hearing more reports of break-ins around Mallacoota while people are at the relief centre. Anyone else seeing this?',                              '2026-01-22T21:08:00+11:00',  230, 'https://reddit.com/r/melbourne/comments/18',              0.4),
 
-    -- nar_009  Fake recovery donation account (HIGH)
     ('post_019', '@helpgippsfire',     'TWITTER',  'Donate to East Gippsland fire relief: bsb 063-000 acc 12345678. Every dollar goes direct to families. RT please.',                               '2026-01-21T11:30:00+11:00', 6700, 'https://twitter.com/helpgippsfire/status/19',             0.7),
     ('post_020', 'GippsRecoveryFund',  'FACEBOOK', 'Official East Gippsland Recovery Fund is now live. Bank details in comments. Please share widely.',                                              '2026-01-21T12:15:00+11:00', 4100, 'https://facebook.com/GippsRecoveryFund/posts/20',         0.7),
 
-    -- Unclustered, legitimate / low-risk posts (useful for testing "no cluster" queries)
     ('post_021', '@cfa_vic',           'TWITTER',  'Watch and Act issued for areas south of Bairnsdale. Monitor VicEmergency for updates.',                                                          '2026-01-22T07:32:00+11:00',  980, 'https://twitter.com/cfa_vic/status/21',                   0.0),
     ('post_022', '@vicemergency',      'TWITTER',  'Princes Highway between Bairnsdale and Lakes Entrance: OPEN with reduced limits. CFA traffic management active.',                                '2026-01-22T12:30:00+11:00', 1240, 'https://twitter.com/vicemergency/status/22',              0.0),
     ('post_023', 'u/halls_gap_local',  'REDDIT',   'Just got back from the CFA briefing in Halls Gap. Containment lines holding, no overnight wind change forecast. Don''t panic.',                  '2026-01-21T22:30:00+11:00',  320, 'https://reddit.com/r/grampians/comments/23',              0.1),
     ('post_024', '@bom_vic',           'TWITTER',  'South-westerly change for Otway Ranges between 4pm and 6pm today. Conditions easing afterwards.',                                                '2026-01-23T09:00:00+11:00',  540, 'https://twitter.com/bom_vic/status/24',                   0.0);
 
--- ---------------------------------------------------------------------------
--- Narrative clusters
--- ---------------------------------------------------------------------------
 INSERT INTO narrative_clusters (id, summary, incident_id, spread_status, review_status) VALUES
-    -- From JSON
     ('nar_001', 'False evacuation order for Bairnsdale CBD',                              'inc_east_gippsland', 'SPREADING_FAST', 'NEEDS_REVIEW'),
     ('nar_002', 'Arson conspiracy claims about Grampians fire ignition',                  'inc_grampians',      'GROWING',        'CONFIRMED_MISINFORMATION'),
     ('nar_003', 'False claim that Lakes Entrance Road is closed',                         'inc_east_gippsland', 'SPREADING_FAST', 'NEEDS_REVIEW'),
     ('nar_004', 'Unverified weather speculation in the Otway Ranges',                     'inc_otway_ranges',   'STEADY',         'NEEDS_REVIEW'),
     ('nar_005', 'Phishing scam impersonating a $5000 emergency rebuild grant',            'inc_east_gippsland', 'GROWING',        'CORRECTION_PUBLISHED'),
     ('nar_006', 'Low-credibility speculation about understated Grampians wind change',    'inc_grampians',      'STEADY',         'DISMISSED'),
-    -- Extras
     ('nar_007', 'False water-bomber crash report in the Grampians',                       'inc_grampians',      'SPREADING_FAST', 'CONFIRMED_MISINFORMATION'),
     ('nar_008', 'Looting rumours in evacuated East Gippsland towns',                      'inc_east_gippsland', 'STEADY',         'NEEDS_REVIEW'),
     ('nar_009', 'Fake recovery donation account using fraudulent bank details',           'inc_east_gippsland', 'GROWING',        'CORRECTION_PUBLISHED');
 
--- ---------------------------------------------------------------------------
--- Key claims
--- ---------------------------------------------------------------------------
 INSERT INTO narrative_cluster_key_claims (narrative_cluster_id, content) VALUES
     ('nar_001', 'CFA has ordered a full evacuation of Bairnsdale CBD'),
     ('nar_001', 'The fire is closer to Bairnsdale than authorities are admitting'),
@@ -173,7 +129,6 @@ INSERT INTO narrative_cluster_matched_facts (narrative_cluster_id, source, "time
     ('nar_006', 'CFA Official Bulletin', '2026-01-21T21:30:00+11:00',
      'Grampians National Park fire: current containment lines are holding. No change to warning level for Halls Gap area at this time.'),
 
-    -- Extras
     ('nar_007', 'Coulson Aviation',      '2026-01-21T16:00:00+11:00',
      'All Coulson aircraft assigned to Victoria are accounted for. No incidents to report. Operations continuing as scheduled.'),
     ('nar_007', 'CFA Official Bulletin', '2026-01-21T16:10:00+11:00',
@@ -187,9 +142,6 @@ INSERT INTO narrative_cluster_matched_facts (narrative_cluster_id, source, "time
     ('nar_009', 'Scamwatch (ACCC)',      '2026-01-21T13:30:00+11:00',
      'Reports of fraudulent bushfire donation accounts. Verify legitimacy before transferring funds; report to scamwatch.gov.au.');
 
--- ---------------------------------------------------------------------------
--- Cluster <-> post links
--- ---------------------------------------------------------------------------
 INSERT INTO narrative_cluster_posts (cluster_id, post_id) VALUES
     ('nar_001', 'post_001'), ('nar_001', 'post_002'), ('nar_001', 'post_003'),
     ('nar_002', 'post_004'), ('nar_002', 'post_005'),
@@ -200,6 +152,5 @@ INSERT INTO narrative_cluster_posts (cluster_id, post_id) VALUES
     ('nar_007', 'post_015'), ('nar_007', 'post_016'),
     ('nar_008', 'post_017'), ('nar_008', 'post_018'),
     ('nar_009', 'post_019'), ('nar_009', 'post_020');
-    -- post_021..post_024 are intentionally unclustered.
 
 COMMIT;

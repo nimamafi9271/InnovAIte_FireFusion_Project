@@ -109,8 +109,13 @@ SELECT
         'critical', count(*) FILTER (WHERE p.severity = 'CRITICAL'),
         'high', count(*) FILTER (WHERE p.severity = 'HIGH'),
         'medium', count(*) FILTER (WHERE p.severity = 'MEDIUM')
-    ) AS severity_breakdown
-
+    ) AS severity_breakdown,
+    (array_agg(nc.summary ORDER BY CASE p.severity
+        WHEN 'CRITICAL' THEN 3
+        WHEN 'HIGH'     THEN 2
+        WHEN 'MEDIUM'   THEN 1
+        ELSE 0
+    END DESC NULLS LAST))[1] AS top_threat
 FROM incidents i
 LEFT JOIN narrative_clusters nc ON nc.incident_id = i.id
 LEFT JOIN narrative_cluster_posts ncp ON ncp.cluster_id = nc.id
