@@ -8,110 +8,8 @@ import {
   Polyline,
 } from "react-leaflet";
 
-const SidebarItem = ({ children, active = false, icon }) => {
-  return (
-    <div
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition ${
-        active
-          ? "bg-orange-500 font-semibold text-white shadow-md shadow-orange-500/30"
-          : "text-slate-400 hover:bg-white/5 hover:text-white"
-      }`}
-    >
-      <span className="w-4 text-center text-[13px]">{icon}</span>
-      <span>{children}</span>
-    </div>
-  );
-};
-
-const Sidebar = () => {
-  return (
-    <aside className="flex h-screen w-[240px] flex-shrink-0 flex-col bg-[#151824] text-white">
-      <div className="flex items-center gap-3 border-b border-white/10 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500 text-xs font-bold shadow-lg shadow-orange-500/30">
-          FF
-        </div>
-
-        <div>
-          <div className="text-[15px] font-bold leading-tight text-white">
-            FireFusion
-          </div>
-          <div className="text-[10px] text-slate-500">Emergency Ops</div>
-        </div>
-      </div>
-
-      <div className="px-3 py-4">
-        <div className="mb-3 px-2 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600">
-          Main Menu
-        </div>
-
-        <div className="space-y-1">
-          <SidebarItem icon="⌘">Dashboard</SidebarItem>
-          <SidebarItem icon="♧">Fire Map</SidebarItem>
-          <SidebarItem icon="△">Alerts</SidebarItem>
-          <SidebarItem icon="⌕">Misinformation</SidebarItem>
-          <SidebarItem icon="□">Reports</SidebarItem>
-          <SidebarItem icon="⌁" active>
-            Analytics
-          </SidebarItem>
-        </div>
-      </div>
-
-      <div className="flex-1" />
-
-      <div className="border-t border-white/10 px-3 py-4">
-        <div className="mb-3 px-2 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600">
-          System
-        </div>
-
-        <div className="space-y-1">
-          <SidebarItem icon="♧">Notifications</SidebarItem>
-          <SidebarItem icon="☼">Settings</SidebarItem>
-        </div>
-
-        <div className="mt-6 flex items-center gap-3 px-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-[11px] font-bold text-white">
-            VA
-          </div>
-
-          <div>
-            <div className="text-[12px] font-bold text-white">
-              Vardhan Akula
-            </div>
-            <div className="text-[10px] text-slate-500">Emergency Mgr</div>
-          </div>
-        </div>
-      </div>
-    </aside>
-  );
-};
-
-const Topbar = () => {
-  return (
-    <header className="flex h-[56px] items-center gap-2 border-b border-slate-200 bg-white px-5">
-      <h1 className="mr-2 text-[17px] font-bold text-slate-900">Analytics</h1>
-
-      <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] text-slate-500">
-        ◉ Region: <strong className="text-slate-900">Australia</strong>
-      </div>
-
-      <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] font-semibold text-slate-900">
-        ◷ 18 Mar 2026 14:00–20:00
-      </div>
-
-      <div className="rounded-md border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[12px] font-bold text-emerald-600">
-        ● Updated 2 min ago
-      </div>
-
-      <button className="ml-auto rounded-md border-2 border-red-500 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-red-500 shadow-sm">
-        Extreme Risk
-      </button>
-
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-[11px] font-bold text-white">
-        VA
-      </div>
-    </header>
-  );
-};
+import Layout from "../components/Layout";
+import "../App.css";
 
 const Sparkline = ({ color, points }) => {
   return (
@@ -153,6 +51,9 @@ const KpiCard = ({ title, value, color, points }) => {
 };
 
 const KPISection = () => {
+  // MOCK DATA:
+  // Backend analytics summary API is not available in this sprint.
+  // These values are temporary and can be replaced with future API data.
   const data = [
     {
       title: "Overall Risk",
@@ -187,7 +88,7 @@ const KPISection = () => {
   ];
 
   return (
-    <section className="grid grid-cols-5 gap-3">
+    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {data.map((item) => (
         <KpiCard key={item.title} {...item} />
       ))}
@@ -199,7 +100,6 @@ const WeatherTimeline = () => {
   const [weather, setWeather] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // East Gippsland / Mallacoota coordinates
   const latitude = -37.558;
   const longitude = 149.754;
 
@@ -224,6 +124,9 @@ const WeatherTimeline = () => {
       try {
         setLoading(true);
 
+        // REAL DATA:
+        // Weather data is fetched from Open-Meteo.
+        // Fallback mock data is only used if the API request fails.
         const response = await fetch(
           `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m&timezone=Australia%2FSydney&forecast_days=1`
         );
@@ -294,7 +197,7 @@ const WeatherTimeline = () => {
 
   if (loading) {
     return (
-      <section className="grid grid-cols-6 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      <section className="grid grid-cols-2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:grid-cols-3 lg:grid-cols-6">
         {Array.from({ length: 6 }).map((_, index) => (
           <div
             key={index}
@@ -318,7 +221,7 @@ const WeatherTimeline = () => {
   }
 
   return (
-    <section className="grid grid-cols-6 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <section className="grid grid-cols-2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:grid-cols-3 lg:grid-cols-6">
       {weather.map((item) => (
         <div
           key={item.time}
@@ -352,6 +255,9 @@ const WeatherTimeline = () => {
 };
 
 const IncidentMap = () => {
+  // MOCK DATA:
+  // Backend bushfire/community GeoJSON APIs are not available in this sprint.
+  // These map zones and routes are temporary frontend data.
   const fireZones = [
     {
       name: "Mallacoota Active Fire",
@@ -391,10 +297,10 @@ const IncidentMap = () => {
 
   return (
     <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="flex h-10 items-center gap-2 border-b border-slate-200 px-4">
+      <div className="flex min-h-10 flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-2">
         <span className="text-slate-400">♡</span>
 
-        <h2 className="flex-1 text-[14px] font-bold text-slate-900">
+        <h2 className="min-w-[180px] flex-1 text-[14px] font-bold text-slate-900">
           Incident Map — East Gippsland, VIC
         </h2>
 
@@ -411,7 +317,7 @@ const IncidentMap = () => {
         </button>
       </div>
 
-      <div className="h-[260px] w-full">
+      <div className="h-[260px] w-full sm:h-[320px]">
         <MapContainer
           center={[-37.65, 149.1]}
           zoom={8}
@@ -495,16 +401,16 @@ const IncidentMap = () => {
         </MapContainer>
       </div>
 
-      <div className="flex border-t border-slate-200 bg-slate-50 text-[11px] text-slate-600">
-        <div className="border-r border-slate-200 px-4 py-2">
+      <div className="grid grid-cols-1 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="border-b border-slate-200 px-4 py-2 sm:border-r lg:border-b-0">
           Area burnt: <strong className="text-red-500">14,320 ha</strong>
         </div>
 
-        <div className="border-r border-slate-200 px-4 py-2">
+        <div className="border-b border-slate-200 px-4 py-2 lg:border-b-0 lg:border-r">
           Perimeter: <strong className="text-orange-500">284 km</strong>
         </div>
 
-        <div className="border-r border-slate-200 px-4 py-2">
+        <div className="border-b border-slate-200 px-4 py-2 sm:border-r lg:border-b-0">
           Contained: <strong className="text-emerald-600">12%</strong>
         </div>
 
@@ -534,6 +440,9 @@ const RiskTag = ({ children, type }) => {
 };
 
 const CommunityRisk = () => {
+  // MOCK DATA:
+  // Community risk backend data is planned for future integration.
+  // This temporary data keeps the frontend page functional for this sprint.
   const data = [
     ["Mallacoota", "Pop. 1,100 · Evac", "EXTREME", "extreme"],
     ["Orbost", "Pop. 2,400 · Watch", "HIGH", "high"],
@@ -555,7 +464,7 @@ const CommunityRisk = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-6 px-4 py-3">
+      <div className="grid grid-cols-1 gap-x-6 px-4 py-3 md:grid-cols-2">
         {data.map(([name, desc, risk, type]) => (
           <div
             key={name}
@@ -575,6 +484,9 @@ const CommunityRisk = () => {
 };
 
 const CommunicationsLog = () => {
+  // MOCK DATA:
+  // Official communications API is not available yet.
+  // This data represents the expected future response structure.
   const data = [
     [
       "13:42",
@@ -618,14 +530,14 @@ const CommunicationsLog = () => {
         {data.map(([time, label, text, color]) => (
           <div
             key={`${time}-${label}`}
-            className="flex items-start gap-3 border-b border-slate-100 px-4 py-2 last:border-b-0"
+            className="flex flex-col gap-2 border-b border-slate-100 px-4 py-2 last:border-b-0 sm:flex-row sm:items-start sm:gap-3"
           >
             <span className="w-10 font-mono text-[11px] text-slate-400">
               {time}
             </span>
 
             <span
-              className={`rounded px-2 py-0.5 text-[9px] font-bold text-white ${color}`}
+              className={`w-fit rounded px-2 py-0.5 text-[9px] font-bold text-white ${color}`}
             >
               {label}
             </span>
@@ -641,6 +553,9 @@ const CommunicationsLog = () => {
 };
 
 const Misinformation = () => {
+  // MOCK DATA:
+  // Misinformation source data is hardcoded for this sprint.
+  // Backend integration can replace this later.
   const data = [
     [
       "Facebook groups",
@@ -692,9 +607,11 @@ const Misinformation = () => {
         {data.map(([name, width, count, tag, bar, tagStyle]) => (
           <div
             key={name}
-            className="flex items-center gap-4 border-b border-slate-100 px-4 py-2.5 last:border-b-0"
+            className="flex flex-col gap-2 border-b border-slate-100 px-4 py-2.5 last:border-b-0 sm:flex-row sm:items-center sm:gap-4"
           >
-            <div className="w-[130px] text-[12px] text-slate-600">{name}</div>
+            <div className="w-full text-[12px] text-slate-600 sm:w-[130px]">
+              {name}
+            </div>
 
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
               <div
@@ -721,27 +638,19 @@ const Misinformation = () => {
 
 export default function FireFusionAnalytics() {
   return (
-    <div className="flex h-screen overflow-hidden bg-[#eef0f4]">
-      <Sidebar />
+    <Layout title="Analytics">
+      <div className="space-y-3">
+        <KPISection />
+        <WeatherTimeline />
+        <IncidentMap />
 
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Topbar />
-
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          <div className="space-y-3">
-            <KPISection />
-            <WeatherTimeline />
-            <IncidentMap />
-
-            <div className="grid grid-cols-2 gap-3">
-              <CommunityRisk />
-              <CommunicationsLog />
-            </div>
-
-            <Misinformation />
-          </div>
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          <CommunityRisk />
+          <CommunicationsLog />
         </div>
-      </main>
-    </div>
+
+        <Misinformation />
+      </div>
+    </Layout>
   );
 }
