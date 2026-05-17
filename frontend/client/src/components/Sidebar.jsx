@@ -99,8 +99,12 @@ export default function Sidebar() {
           <b>3</b>
         </button>
 
-        <button className="nav-item">
+        <button
+          className={`nav-item ${location.pathname === "/settings" ? "active" : ""}`}
+          onClick={() => navigate("/settings")}
+        >
           <span><Settings size={17} /> Settings</span>
+          {location.pathname === "/settings" && <ChevronRight size={16} />}
         </button>
 
         <div className="profile-card">
